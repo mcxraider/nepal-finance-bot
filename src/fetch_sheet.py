@@ -10,7 +10,8 @@ SCOPES = ["https://www.googleapis.com/auth/spreadsheets.readonly"]
 
 SAMPLE_SPREADSHEET_ID = "1gNMdlnevrfawztpJdujWn54WxohZB9pLD5KG5EapImM"
 SAMPLE_RANGE_NAME = 'Sheet1!A1:D10' 
-
+CREDENTIALS_PATH = "../credentials.json"
+TOKEN_PATH = "../token.json"
 
 def fetch_sheet():
 
@@ -24,11 +25,11 @@ def fetch_sheet():
       creds.refresh(Request())
     else:
       flow = InstalledAppFlow.from_client_secrets_file(
-          "credentials.json", SCOPES
+          CREDENTIALS_PATH, SCOPES
       )
       creds = flow.run_local_server(port=0)
-    # Save the credentials for the next run
-    with open("token.json", "w") as token:
+
+    with open(TOKEN_PATH, "w") as token:
       token.write(creds.to_json())
 
   try:
