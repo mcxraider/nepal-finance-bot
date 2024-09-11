@@ -74,9 +74,9 @@ def handle_response(update: Update, context: CallbackContext) -> None:
             answer = status["status_msg"]
 
             if answer in ["Approved", "Rejected"]:
-                update.message.reply_text(f"Claim ID: {claim_id} has been {answer}")
+                update.message.reply_text(f"Claim ID: {claim_id} has been {answer}", reply_markup=ReplyKeyboardRemove())
             else:
-                update.message.reply_text(f"Claim ID: {claim_id} is still {answer}")
+                update.message.reply_text(f"Claim ID: {claim_id} is still {answer}", reply_markup=ReplyKeyboardRemove())
 
         context.user_data["waiting_for_claim_id"] = False
         return
@@ -86,7 +86,7 @@ def handle_response(update: Update, context: CallbackContext) -> None:
 
         context.user_data["waiting_for_department"] = False
         context.user_data["waiting_for_name"] = True
-        update.message.reply_text("Please enter your name:")
+        update.message.reply_text("Please enter your name:", reply_markup=ReplyKeyboardRemove())
         return
 
     if context.user_data.get("waiting_for_name"):
@@ -94,7 +94,7 @@ def handle_response(update: Update, context: CallbackContext) -> None:
 
         context.user_data["waiting_for_name"] = False
         context.user_data["waiting_for_category"] = True
-        update.message.reply_text("What are you claiming for?")
+        update.message.reply_text("What are you claiming for?", reply_markup=ReplyKeyboardRemove())
         return
 
     if context.user_data.get("waiting_for_category"):
@@ -102,14 +102,14 @@ def handle_response(update: Update, context: CallbackContext) -> None:
 
         context.user_data["waiting_for_category"] = False
         context.user_data["waiting_for_amount"] = True
-        update.message.reply_text("Please enter the amount to claim:")
+        update.message.reply_text("Please enter the amount to claim:", reply_markup=ReplyKeyboardRemove())
         return
 
     if context.user_data.get("waiting_for_amount"):
         context.user_data["amount"] = user_response
 
         context.user_data["waiting_for_receipt"] = True
-        update.message.reply_text("Please upload a picture of the receipt.")
+        update.message.reply_text("Please upload a picture of the receipt.", reply_markup=ReplyKeyboardRemove())
 
         context.user_data["waiting_for_amount"] = False
         return
@@ -144,19 +144,22 @@ def image_handler(update: Update, context: CallbackContext) -> None:
     """
     Handles the receipt image sent by the user.
     """
+    
     if context.user_data.get("waiting_for_receipt"):
         # Check if the message contains a photo
         if update.message.photo:
             photo_file = update.message.photo[-1].get_file()
+            # Store the image
+            context.user_data["image"] = photo_file
+
             image_uuid = str(uuid.uuid4())
 
             # TODO: this can be edited to give users better access
-            receipt_path = f"../receipts/{image_uuid}.jpg"
+            receipt_path = f"{image_uuid}.jpg"
 
             try:
-                # send it directly to Google Drive without saving locally
-                send_receipt_to_cloud(receipt_path, photo_file)
-
+                # Send it directly to Google Drive without saving locally
+                # send_receipt_to_cloud(receipt_path, photo_file)
                 update.message.reply_text(
                     "Receipt received! Thank you for submitting your claim."
                 )
@@ -174,7 +177,7 @@ def image_handler(update: Update, context: CallbackContext) -> None:
         context.user_data["waiting_for_receipt"] = False
 
         # store the UUID in user_data for reference later
-        context.user_data["receipt_uuid"] = image_uuid
+        context.user_data["receipt_uuid"] = receipt_path
 
         # Send user a confirmation message
         department = context.user_data.get("department", "").capitalize()
@@ -182,6 +185,7 @@ def image_handler(update: Update, context: CallbackContext) -> None:
         category = context.user_data.get("category", "").capitalize()
         amount = context.user_data.get("amount", "").capitalize()
         receipt_id = context.user_data.get("receipt_uuid", "").capitalize()
+        image = context.user_data.get("image", "")
 
         confirmation_message = (
             f"Here is the claim you are making:\n"
@@ -191,24 +195,24 @@ def image_handler(update: Update, context: CallbackContext) -> None:
             f"Amount: {amount}\n"
             f"Receipt ID (Please keep this ID safe!): {receipt_id}\n"
         )
-
         update.message.reply_text(confirmation_message)
         
         # Since this is the final stage, can send user data to the excel sheet
         export_claim(department, name, category, amount, receipt_id)
+        send_receipt_to_cloud(receipt_path, image)
 
 
-def non_photo_handler(update: Update, context: CallbackContext) -> None:
+
+def non_image_handler(update: Update, context: CallbackContext) -> None:
     """Handles cases where the user sends non-photo files like .ipynb or other documents."""
     # Check if the document is not an image
     if update.message.document:
         update.message.reply_text(
-            "It looks like you uploaded a non-image file. Please upload a valid photo (JPG format)."
-        )
+            "It looks like you uploaded a non-image file. Please upload a valid photo (JPG format).")
+        
     else:
         update.message.reply_text(
-            "Please upload a valid photo (JPG format) for your receipt."
-        )
+            "Please upload a valid photo (JPG format) for your receipt.")
 
 
 # Main function to run the bot
@@ -225,15 +229,13 @@ def main() -> None:
     dispatcher.add_handler(CommandHandler("start", start))
 
     # Add a generic message handler for non-command messages
-    dispatcher.add_handler(
-        MessageHandler(Filters.text & ~Filters.command, handle_response)
-    )
+    dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, handle_response))
 
     # Add handler for receipt image (photo)
     dispatcher.add_handler(MessageHandler(Filters.photo, image_handler))
 
     # Add a generic handler for other file/document types
-    dispatcher.add_handler(MessageHandler(Filters.document, non_photo_handler))
+    dispatcher.add_handler(MessageHandler(Filters.document, non_image_handler))
 
     # Log all errors
     dispatcher.add_error_handler(error_handler)
