@@ -71,5 +71,9 @@ def get_claim_status(df, id):
     
     return {"error": False, "status_msg": status_msg}
 
+
+def send_to_sheet(department, name, category, amount)
+
+
 if __name__ == "__main__":
     fetch_sheet()
