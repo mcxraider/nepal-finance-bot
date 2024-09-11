@@ -1,39 +1,48 @@
-import os.path
+import os
+import io
 import pandas as pd
+from datetime import datetime
+
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
+from googleapiclient.http import MediaIoBaseUpload
+from google.oauth2.credentials import Credentials
+from googleapiclient.discovery import build
 
-SCOPES = ["https://www.googleapis.com/auth/spreadsheets.readonly"]
+
+# Scopes define the level of access we're requesting, for now we can read and write
+SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
 
 SAMPLE_SPREADSHEET_ID = "1gNMdlnevrfawztpJdujWn54WxohZB9pLD5KG5EapImM"
-SAMPLE_RANGE_NAME = 'Sheet1!A1:M10' 
+SAMPLE_RANGE_NAME = "Sheet1!A1:M10"
 CREDENTIALS_PATH = "../credentials.json"
 TOKEN_PATH = "../token.json"
 
 
 def fetch_sheet():
-    '''
+    """
     Fetches data from the excel sheet and stores returns it as a pandas dataframe
-    '''
-    
+    """
+
     creds = None
 
     # Check if token.json exists and load it if it does
+    # Need better error handling for this
     if os.path.exists(TOKEN_PATH):
         creds = Credentials.from_authorized_user_file(TOKEN_PATH, SCOPES)
 
     # If no valid credentials are available, log in again
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())  # Refresh the token if it’s expired
+            creds.refresh(Request())  # refresh the token if it’s expired
         else:
-            # Log in and get new credentials
+            # log in and get new credentials
             flow = InstalledAppFlow.from_client_secrets_file(CREDENTIALS_PATH, SCOPES)
             creds = flow.run_local_server(port=0)
-        
+
         # Save the credentials for future runs
         with open(TOKEN_PATH, "w") as token:
             token.write(creds.to_json())
@@ -49,14 +58,14 @@ def fetch_sheet():
         )
         # retrieve the sheet data
         sheet = result.get("values", [])
-        
+
         # Check if there's data in the sheet
         if not sheet:
             return "No data found in the Google Sheet."
 
         # Here the sheet is a pandas dataframe
         df = pd.DataFrame(sheet[1:], columns=sheet[0])
-        
+
         return df
 
     except HttpError as err:
@@ -68,11 +77,114 @@ def get_claim_status(df, id):
         status_msg = df[df["Claim ID"] == id]["Approval Status"].values[0]
     except IndexError:
         return {"error": True, "status_msg": id}
-    
+
     return {"error": False, "status_msg": status_msg}
 
 
-def send_to_sheet(department, name, category, amount)
+def send_receipt_to_cloud(receipt_path: str, photo_file) -> str:
+    """Uploads the receipt to a pre-defined folder in Google Drive and returns the file ID."""
+
+    # Path to the token and credentials
+    TOKEN_PATH = "../gdrive_token.json"  # The path where the token will be saved
+    CREDENTIALS_PATH = "../credentials.json"  # The path to the client credentials
+    FOLDER_ID = "1KEAQLm2S_R11y9N7C7pVW5FTmXu6i07A"
+    creds = None
+
+    if os.path.exists(TOKEN_PATH):
+        creds = Credentials.from_authorized_user_file(TOKEN_PATH, SCOPES)
+
+    if not creds or not creds.valid:
+        if creds and creds.expired and creds.refresh_token:
+            creds.refresh(Request())  # refresh the token if it’s expired
+        else:
+            # Log in and get new credentials
+            flow = InstalledAppFlow.from_client_secrets_file(CREDENTIALS_PATH, SCOPES)
+            creds = flow.run_local_server(port=0)
+
+        with open(TOKEN_PATH, "w") as token:
+            token.write(creds.to_json())
+
+    service = build("drive", "v3", credentials=creds)
+
+    # Validate the MIME type to ensure it's a JPG
+    if photo_file.file_path.endswith(".jpg") or photo_file.file_path.endswith(".jpeg"):
+        # Use a unique file name for the receipt using the UUID
+        image_uuid = receipt_path
+        file_metadata = {
+            "name": f"{image_uuid}.jpg",
+            "parents": [FOLDER_ID],
+        }
+
+        # Upload the file object directly to Google Drive
+        receipt_stream = io.BytesIO(photo_file.download_as_bytearray())
+        media = MediaIoBaseUpload(receipt_stream, mimetype="image/jpeg")
+
+        # Upload the file to Google Drive inside the folder
+        file = (
+            service.files()
+            .create(body=file_metadata, media_body=media, fields="id")
+            .execute()
+        )
+        return
+
+    else:
+        raise ValueError("File type is not JPG")
+
+
+def export_claim(department, name, category, amount, receipt_id):
+    """
+    Appends a new claim to the Google Sheet.
+    """
+
+    current_date = datetime.now().strftime("%Y/%m/%d")
+
+    new_row = [
+        receipt_id,
+        department,
+        name,
+        current_date,
+        category,
+        amount,
+        "Pending",
+        "Yes",
+    ]
+
+    creds = None
+
+    if os.path.exists(TOKEN_PATH):
+        creds = Credentials.from_authorized_user_file(TOKEN_PATH, SCOPES)
+
+    # If no valid credentials are available, log in again
+    if not creds or not creds.valid:
+        if creds and creds.expired and creds.refresh_token:
+            creds.refresh(Request())  # refresh the token if it’s expired
+        else:
+            flow = InstalledAppFlow.from_client_secrets_file(CREDENTIALS_PATH, SCOPES)
+            creds = flow.run_local_server(port=0)
+
+        with open(TOKEN_PATH, "w") as token:
+            token.write(creds.to_json())
+
+    try:
+        # Call the Google Sheets API
+        service = build("sheets", "v4", credentials=creds)
+        sheet = service.spreadsheets()
+
+        # appending the new row
+        request = sheet.values().append(
+            spreadsheetId=SAMPLE_SPREADSHEET_ID,
+            range=SAMPLE_RANGE_NAME,
+            valueInputOption="RAW",
+            insertDataOption="INSERT_ROWS",
+            body={"values": [new_row]},
+        )
+        response = request.execute()
+
+        print(f"Claim successfully appended to Sheet ID {response['spreadsheetId']}")
+
+    except HttpError as err:
+        print(f"An error occurred: {err}")
+        return
 
 
 if __name__ == "__main__":
