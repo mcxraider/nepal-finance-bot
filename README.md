@@ -7,6 +7,7 @@ A utility telegram bot for the STEER Nepal trip Provides some admin features for
 - [TeleBot for Nepal Trip - Claim Management Bot](#telebot-for-nepal-trip---claim-management-bot)
   - [Table of Contents](#table-of-contents)
   - [Features](#features)
+- [Additional feature needed:](#additional-feature-needed)
   - [Prerequisites](#prerequisites)
   - [Setup Guide](#setup-guide)
     - [Google Sheets API Setup](#google-sheets-api-setup)
@@ -28,7 +29,9 @@ A utility telegram bot for the STEER Nepal trip Provides some admin features for
 - **Submit Claims**: Users can submit claims by entering the department, name, claim category, and amount, followed by uploading a receipt photo.
 - **Check Claim Status**: Users can check the status of their claim by providing a claim ID.
 - **Receipt Storage**: Receipts are uploaded to Google Drive, and the claim details are stored in a Google Sheet.
-- **Error Handling**: The bot provides detailed error messages and logging for debugging.
+
+# Additional feature needed:
+- **Submitting proof of payment**: Users can use this to submit proof that they have sent money to the account
 
 ## Prerequisites
 Before setting up the bot, ensure you have the following:
