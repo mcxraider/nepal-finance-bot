@@ -2,6 +2,8 @@ import os
 import io
 import pandas as pd
 from datetime import datetime
+from dotenv import load_dotenv
+import yaml
 
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
@@ -12,18 +14,25 @@ from googleapiclient.http import MediaIoBaseUpload
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 
+load_dotenv()
+SAMPLE_SPREADSHEET_ID = os.environ['SAMPLE_SPREADSHEET_ID']
+DRIVE_FOLDER_ID = os.environ['DRIVE_FOLDER_ID']
 
-# Scopes define the level of access we're requesting, for now we can read and write
-SHEETS_SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
-G_DRIVE_SCOPES = ["https://www.googleapis.com/auth/drive.file"]
+# Load in config file
+def load_config():
+    with open("config.yaml", "r") as file:
+        config = yaml.safe_load(file)
+    return config
 
-SAMPLE_SPREADSHEET_ID = "1gNMdlnevrfawztpJdujWn54WxohZB9pLD5KG5EapImM"
-SAMPLE_RANGE_NAME = "Sheet1!A:M"
-CREDENTIALS_PATH = "../credentials.json"
-SHEET_TOKEN_PATH = "../sheet_token.json"
-DRIVE_TOKEN_PATH = "../drive_token.json"
+# Load the config 
+config = load_config()
 
-DRIVE_FOLDER_ID = "1KEAQLm2S_R11y9N7C7pVW5FTmXu6i07A"
+SHEETS_SCOPES = config['sheets']['scopes']
+G_DRIVE_SCOPES = config['drive']['scopes']
+SAMPLE_RANGE_NAME = config['sheets']['range_name']
+CREDENTIALS_PATH = config['credentials']['path']
+SHEET_TOKEN_PATH = config['sheets']['token_path']
+DRIVE_TOKEN_PATH = config['drive']['token_path']
 
 
 def fetch_sheet():
