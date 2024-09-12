@@ -74,7 +74,7 @@ Before setting up the bot, ensure you have the following:
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/your-username/nepal-telebot.git
+   git clone https://github.com/your-username/nepal-finance.git
    cd nepal-telebot
    ```
 
@@ -110,7 +110,12 @@ Before setting up the bot, ensure you have the following:
 ## Running the Bot
 
 1. **Run the bot**:
-   Once everything is set up, run the bot using:
+   Once everything is set up, navigate to the src folder
+   ```bash
+   cd src
+   ```
+   
+   Then, run the bot using:
    ```bash
    python3 telebot.py
    ```
@@ -120,7 +125,7 @@ Before setting up the bot, ensure you have the following:
    - This will create the `sheet_token.json` and `drive_token.json` files for future sessions.
 
 3. **Bot Activation**:
-   Once the bot is running, start interacting with it by searching for it in Telegram and typing `/start`.
+   Once the bot is running, start interacting with it by searching for it in Telegram with the username `@nepalfinancebot` and typing `/start`.
 
 ## Bot Commands and Interactions
 
