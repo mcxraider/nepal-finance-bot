@@ -63,11 +63,13 @@ def handle_non_image_file(update: Update, context: CallbackContext) -> None:
 
     if is_valid_non_image_file(file_type):
         update.message.reply_text(
-            "It looks like you uploaded a non-image file. Please upload a valid photo (JPG/PNG format)."
+            "📝 *It looks like you uploaded a non-image file.*\n\n"
+            "Please upload a valid photo in *JPG* or *PNG* format."
         )
     else:
         update.message.reply_text(
-            "Unsupported file type. Please upload a JPG image for your receipt."
+            "🚫 *Unsupported file type detected.*\n\n"
+            "Please upload a clear image of your receipt in *JPG* format."
         )
 
 
@@ -86,17 +88,24 @@ def is_valid_non_image_file(file_type: str) -> bool:
 def request_valid_image(update: Update) -> None:
     """Prompts the user to upload a valid image if no document is uploaded."""
     update.message.reply_text(
-        "Please upload a valid photo (JPG format) for your receipt."
+        "🖼️ *Oops! It looks like you uploaded a document instead.*\n\n"
+        "Please make sure to upload a clear image of your receipt in *JPG format*."
     )
 
 
 def notify_payment_feature_coming(update: Update) -> None:
     """Notifies the user that the proof of payment feature is coming soon."""
     update.message.reply_text(
-        "This functionality is coming soon!", reply_markup=ReplyKeyboardRemove()
+        "🚧 *Hang tight!*\n\nThe *Submit Proof of Payment* feature is coming soon. Stay tuned for updates!",
+        reply_markup=ReplyKeyboardRemove(),
     )
 
 
 def notify_invalid_option(update: Update) -> None:
     """Notifies the user that the input is not a valid option."""
-    update.message.reply_text("I didn't understand that. Please select a valid option.")
+    error_message = """*Oops! 😕 I didn’t quite get that.*
+
+It looks like you entered an *invalid option* or *command*. Don’t worry, it happens!
+
+👉 Please type `/start` to return to the main menu and explore the chat functions."""
+    update.message.reply_text(error_message, parse_mode="Markdown")

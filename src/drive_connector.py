@@ -4,6 +4,9 @@ import pandas as pd
 from datetime import datetime
 from dotenv import load_dotenv
 import yaml
+from telegram.ext import (
+    CallbackContext,
+)
 
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
@@ -15,8 +18,9 @@ from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 
 load_dotenv()
-SAMPLE_SPREADSHEET_ID = os.environ['SAMPLE_SPREADSHEET_ID']
-DRIVE_FOLDER_ID = os.environ['DRIVE_FOLDER_ID']
+SAMPLE_SPREADSHEET_ID = os.environ["SAMPLE_SPREADSHEET_ID"]
+DRIVE_FOLDER_ID = os.environ["DRIVE_FOLDER_ID"]
+
 
 # Load in config file
 def load_config(config_path):
@@ -24,15 +28,16 @@ def load_config(config_path):
         config = yaml.safe_load(file)
     return config
 
-# Load the config 
+
+# Load the config
 config = load_config(config_path="../config.yaml")
 
-SHEETS_SCOPES = config['sheets']['scopes']
-G_DRIVE_SCOPES = config['drive']['scopes']
-SAMPLE_RANGE_NAME = config['sheets']['range_name']
-CREDENTIALS_PATH = config['credentials']['path']
-SHEET_TOKEN_PATH = config['sheets']['token_path']
-DRIVE_TOKEN_PATH = config['drive']['token_path']
+SHEETS_SCOPES = config["sheets"]["scopes"]
+G_DRIVE_SCOPES = config["drive"]["scopes"]
+SAMPLE_RANGE_NAME = config["sheets"]["range_name"]
+CREDENTIALS_PATH = config["credentials"]["path"]
+SHEET_TOKEN_PATH = config["sheets"]["token_path"]
+DRIVE_TOKEN_PATH = config["drive"]["token_path"]
 
 
 def fetch_sheet():
@@ -144,20 +149,21 @@ def send_receipt_to_cloud(receipt_path: str, photo_file) -> str:
         raise ValueError("File type is not JPG")
 
 
-def export_claim(department, name, category, amount, receipt_id):
+def current_datetime():
+    return datetime.now().strftime("%Y-%m-%d")
+
+def export_claim_details(context: CallbackContext):
     """
     Appends a new claim to the Google Sheet.
     """
-
-    current_date = datetime.now().strftime("%Y/%m/%d")
-
     new_row = [
-        receipt_id,
-        department,
-        name,
-        current_date,
-        category,
-        amount,
+        context.user_data.get("receipt_uuid", "").capitalize(),
+        context.user_data.get("department", "").capitalize(),
+        context.user_data.get("name", "").capitalize(),
+        current_datetime(),
+        context.user_data.get("category", "").capitalize(),
+        context.user_data.get("amount", "").capitalize(),
+        context.user_data.get("description", "").capitalize(),
         "Pending",
         "Yes",
     ]

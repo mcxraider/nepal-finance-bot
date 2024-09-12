@@ -26,15 +26,14 @@ load_dotenv()
 BOT_TOKEN = os.environ["BOTAPI_KEY"]
 
 
-# Refactored start function
 def start(update: Update, context: CallbackContext) -> None:
     """Sends a greeting and asks what the user wants to do"""
 
-    # Modular function to get the reply keyboard
     reply_markup = get_main_menu_keyboard()
 
     update.message.reply_text(
-        "Hello! What would you like to do?", reply_markup=reply_markup
+        "Hi Welcome to the Nepal Finance Bot! What would you like to do?",
+        reply_markup=reply_markup,
     )
 
 
@@ -60,6 +59,18 @@ def handle_response(update: Update, context: CallbackContext) -> None:
 
     if context.user_data.get("waiting_for_amount"):
         handle_amount_input(update, context, user_response)
+        return
+
+    if context.user_data.get("waiting_for_description"):
+        handle_description_input(update, context, user_response)
+        return
+
+    # If waiting for an image but the user sends text, treat it as a non-image submission
+    if context.user_data.get("waiting_for_receipt"):
+        update.message.reply_text(
+            "Sorry, only images are allowed! ⚠️ Please upload an image of your receipt."
+        )
+        # non_image_handler(update, context)
         return
 
     # Handle the main menu options
