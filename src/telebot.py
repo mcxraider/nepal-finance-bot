@@ -29,11 +29,13 @@ BOT_TOKEN = os.environ["BOTAPI_KEY"]
 # Refactored start function
 def start(update: Update, context: CallbackContext) -> None:
     """Sends a greeting and asks what the user wants to do"""
-    
+
     # Modular function to get the reply keyboard
     reply_markup = get_main_menu_keyboard()
 
-    update.message.reply_text("Hello! What would you like to do?", reply_markup=reply_markup)
+    update.message.reply_text(
+        "Hello! What would you like to do?", reply_markup=reply_markup
+    )
 
 
 def handle_response(update: Update, context: CallbackContext) -> None:
@@ -78,7 +80,7 @@ def image_handler(update: Update, context: CallbackContext) -> None:
     """
     if context.user_data.get("waiting_for_receipt"):
         handle_receipt_submission(update, context)
-        context.user_data["waiting_for_receipt"] = False  
+        context.user_data["waiting_for_receipt"] = False
 
 
 def main() -> None:
@@ -96,7 +98,9 @@ def main() -> None:
     dispatcher.add_handler(CommandHandler("start", start))
 
     # Add a generic message handler for non-command messages
-    dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, handle_response))
+    dispatcher.add_handler(
+        MessageHandler(Filters.text & ~Filters.command, handle_response)
+    )
 
     # Add handler for receipt image (photo)
     dispatcher.add_handler(MessageHandler(Filters.photo, image_handler))

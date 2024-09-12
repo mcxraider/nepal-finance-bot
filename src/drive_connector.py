@@ -14,8 +14,8 @@ from googleapiclient.discovery import build
 
 
 # Scopes define the level of access we're requesting, for now we can read and write
-SHEETS_SCOPES  = ["https://www.googleapis.com/auth/spreadsheets"]
-G_DRIVE_SCOPES = ['https://www.googleapis.com/auth/drive.file']
+SHEETS_SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
+G_DRIVE_SCOPES = ["https://www.googleapis.com/auth/drive.file"]
 
 SAMPLE_SPREADSHEET_ID = "1gNMdlnevrfawztpJdujWn54WxohZB9pLD5KG5EapImM"
 SAMPLE_RANGE_NAME = "Sheet1!A:M"
@@ -24,6 +24,7 @@ SHEET_TOKEN_PATH = "../sheet_token.json"
 DRIVE_TOKEN_PATH = "../drive_token.json"
 
 DRIVE_FOLDER_ID = "1KEAQLm2S_R11y9N7C7pVW5FTmXu6i07A"
+
 
 def fetch_sheet():
     """
@@ -43,7 +44,9 @@ def fetch_sheet():
             creds.refresh(Request())  # refresh the token if it’s expired
         else:
             # log in and get new credentials
-            flow = InstalledAppFlow.from_client_secrets_file(CREDENTIALS_PATH, SHEETS_SCOPES)
+            flow = InstalledAppFlow.from_client_secrets_file(
+                CREDENTIALS_PATH, SHEETS_SCOPES
+            )
             creds = flow.run_local_server(port=0)
 
         # Save the credentials for future runs
@@ -96,7 +99,9 @@ def send_receipt_to_cloud(receipt_path: str, photo_file) -> str:
             creds.refresh(Request())  # refresh the token if it’s expired
         else:
             # Log in and get new credentials
-            flow = InstalledAppFlow.from_client_secrets_file(CREDENTIALS_PATH, G_DRIVE_SCOPES)
+            flow = InstalledAppFlow.from_client_secrets_file(
+                CREDENTIALS_PATH, G_DRIVE_SCOPES
+            )
             creds = flow.run_local_server(port=0)
 
         with open(DRIVE_TOKEN_PATH, "w") as token:
@@ -137,14 +142,15 @@ def export_claim(department, name, category, amount, receipt_id):
 
     current_date = datetime.now().strftime("%Y/%m/%d")
 
-    new_row = [receipt_id,
-               department,
-               name,
-               current_date,
-               category,
-               amount,
-               "Pending",
-               "Yes",
+    new_row = [
+        receipt_id,
+        department,
+        name,
+        current_date,
+        category,
+        amount,
+        "Pending",
+        "Yes",
     ]
 
     creds = None
@@ -157,7 +163,9 @@ def export_claim(department, name, category, amount, receipt_id):
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())  # refresh the token if it’s expired
         else:
-            flow = InstalledAppFlow.from_client_secrets_file(CREDENTIALS_PATH, SHEETS_SCOPES)
+            flow = InstalledAppFlow.from_client_secrets_file(
+                CREDENTIALS_PATH, SHEETS_SCOPES
+            )
             creds = flow.run_local_server(port=0)
 
         with open(SHEET_TOKEN_PATH, "w") as token:
