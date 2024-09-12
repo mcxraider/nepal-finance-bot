@@ -25,7 +25,6 @@ logger = logging.getLogger(__name__)
 load_dotenv()
 BOT_TOKEN = os.environ["BOTAPI_KEY"]
 
-
 # Error handler
 def error_handler(update: object, context: CallbackContext) -> None:
     """Log the error and notify the user."""
@@ -42,7 +41,7 @@ def start(update: Update, context: CallbackContext) -> None:
 
     reply_keyboard = [
         ["Submit a Claim", "Check Claim Status", "Submit Proof of Payment"]
-    ]
+        ]
 
     markup = ReplyKeyboardMarkup(
         reply_keyboard,
@@ -74,9 +73,9 @@ def handle_response(update: Update, context: CallbackContext) -> None:
             answer = status["status_msg"]
 
             if answer in ["Approved", "Rejected"]:
-                update.message.reply_text(f"Claim ID: {claim_id} has been {answer}", reply_markup=ReplyKeyboardRemove())
+                update.message.reply_text(f"Claim ID: {claim_id} has been {answer}")
             else:
-                update.message.reply_text(f"Claim ID: {claim_id} is still {answer}", reply_markup=ReplyKeyboardRemove())
+                update.message.reply_text(f"Claim ID: {claim_id} is still {answer}")
 
         context.user_data["waiting_for_claim_id"] = False
         return
@@ -86,7 +85,7 @@ def handle_response(update: Update, context: CallbackContext) -> None:
 
         context.user_data["waiting_for_department"] = False
         context.user_data["waiting_for_name"] = True
-        update.message.reply_text("Please enter your name:", reply_markup=ReplyKeyboardRemove())
+        update.message.reply_text("Please enter your name:")
         return
 
     if context.user_data.get("waiting_for_name"):
@@ -94,7 +93,7 @@ def handle_response(update: Update, context: CallbackContext) -> None:
 
         context.user_data["waiting_for_name"] = False
         context.user_data["waiting_for_category"] = True
-        update.message.reply_text("What are you claiming for?", reply_markup=ReplyKeyboardRemove())
+        update.message.reply_text("What are you claiming for?")
         return
 
     if context.user_data.get("waiting_for_category"):
@@ -102,7 +101,7 @@ def handle_response(update: Update, context: CallbackContext) -> None:
 
         context.user_data["waiting_for_category"] = False
         context.user_data["waiting_for_amount"] = True
-        update.message.reply_text("Please enter the amount to claim:", reply_markup=ReplyKeyboardRemove())
+        update.message.reply_text("Please enter the amount to claim:")
         return
 
     if context.user_data.get("waiting_for_amount"):
@@ -155,7 +154,7 @@ def image_handler(update: Update, context: CallbackContext) -> None:
             image_uuid = str(uuid.uuid4())
 
             # TODO: this can be edited to give users better access
-            receipt_path = f"{image_uuid}.jpg"
+            receipt_path = f"{image_uuid}"
 
             try:
                 # Send it directly to Google Drive without saving locally
@@ -186,16 +185,24 @@ def image_handler(update: Update, context: CallbackContext) -> None:
         amount = context.user_data.get("amount", "").capitalize()
         receipt_id = context.user_data.get("receipt_uuid", "").capitalize()
         image = context.user_data.get("image", "")
-
+        
+        if "$" not in amount:
+            processed_amount  = "$" + amount
+            
         confirmation_message = (
-            f"Here is the claim you are making:\n"
-            f"Department: {department}\n"
-            f"Name: {name}\n"
-            f"Expense Category: {category}\n"
-            f"Amount: {amount}\n"
-            f"Receipt ID (Please keep this ID safe!): {receipt_id}\n"
+            "🧾 *Claim Summary* 🧾\n"
+            "=============================\n"
+            f"📌 *Department*: {department}\n"
+            f"👤 *Name*: {name}\n"
+            f"💼 *Expense Category*: {category}\n"
+            f"💰 *Amount*: {processed_amount}\n"
+            "-----------------------------\n"
+            f"🆔 *Receipt ID*: {receipt_id}\n(Please copy this ID and keep it!)\n"
+            "=============================\n"
         )
-        update.message.reply_text(confirmation_message)
+        
+        update.message.reply_text(confirmation_message, parse_mode='Markdown')
+
         
         # Since this is the final stage, can send user data to the excel sheet
         export_claim(department, name, category, amount, receipt_id)

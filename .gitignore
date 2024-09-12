@@ -1,5 +1,5 @@
 venv
 .env
 credentials.json
-token.json
-gdrive_token.json
+drive_token.json
+sheet_token.json

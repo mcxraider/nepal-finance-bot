@@ -14,13 +14,16 @@ from googleapiclient.discovery import build
 
 
 # Scopes define the level of access we're requesting, for now we can read and write
-SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
+SHEETS_SCOPES  = ["https://www.googleapis.com/auth/spreadsheets"]
+G_DRIVE_SCOPES = ['https://www.googleapis.com/auth/drive.file']
 
 SAMPLE_SPREADSHEET_ID = "1gNMdlnevrfawztpJdujWn54WxohZB9pLD5KG5EapImM"
-SAMPLE_RANGE_NAME = "Sheet1!A1:M10"
+SAMPLE_RANGE_NAME = "Sheet1!A:M"
 CREDENTIALS_PATH = "../credentials.json"
-TOKEN_PATH = "../token.json"
+SHEET_TOKEN_PATH = "../sheet_token.json"
+DRIVE_TOKEN_PATH = "../drive_token.json"
 
+DRIVE_FOLDER_ID = "1KEAQLm2S_R11y9N7C7pVW5FTmXu6i07A"
 
 def fetch_sheet():
     """
@@ -31,8 +34,8 @@ def fetch_sheet():
 
     # Check if token.json exists and load it if it does
     # Need better error handling for this
-    if os.path.exists(TOKEN_PATH):
-        creds = Credentials.from_authorized_user_file(TOKEN_PATH, SCOPES)
+    if os.path.exists(SHEET_TOKEN_PATH):
+        creds = Credentials.from_authorized_user_file(SHEET_TOKEN_PATH, SHEETS_SCOPES)
 
     # If no valid credentials are available, log in again
     if not creds or not creds.valid:
@@ -40,11 +43,11 @@ def fetch_sheet():
             creds.refresh(Request())  # refresh the token if it’s expired
         else:
             # log in and get new credentials
-            flow = InstalledAppFlow.from_client_secrets_file(CREDENTIALS_PATH, SCOPES)
+            flow = InstalledAppFlow.from_client_secrets_file(CREDENTIALS_PATH, SHEETS_SCOPES)
             creds = flow.run_local_server(port=0)
 
         # Save the credentials for future runs
-        with open(TOKEN_PATH, "w") as token:
+        with open(SHEET_TOKEN_PATH, "w") as token:
             token.write(creds.to_json())
 
     try:
@@ -84,24 +87,20 @@ def get_claim_status(df, id):
 def send_receipt_to_cloud(receipt_path: str, photo_file) -> str:
     """Uploads the receipt to a pre-defined folder in Google Drive and returns the file ID."""
 
-    # Path to the token and credentials
-    TOKEN_PATH = "../gdrive_token.json"  # The path where the token will be saved
-    CREDENTIALS_PATH = "../credentials.json"  # The path to the client credentials
-    FOLDER_ID = "1KEAQLm2S_R11y9N7C7pVW5FTmXu6i07A"
     creds = None
 
-    if os.path.exists(TOKEN_PATH):
-        creds = Credentials.from_authorized_user_file(TOKEN_PATH, SCOPES)
+    if os.path.exists(DRIVE_TOKEN_PATH):
+        creds = Credentials.from_authorized_user_file(DRIVE_TOKEN_PATH, G_DRIVE_SCOPES)
 
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())  # refresh the token if it’s expired
         else:
             # Log in and get new credentials
-            flow = InstalledAppFlow.from_client_secrets_file(CREDENTIALS_PATH, SCOPES)
+            flow = InstalledAppFlow.from_client_secrets_file(CREDENTIALS_PATH, G_DRIVE_SCOPES)
             creds = flow.run_local_server(port=0)
 
-        with open(TOKEN_PATH, "w") as token:
+        with open(DRIVE_TOKEN_PATH, "w") as token:
             token.write(creds.to_json())
 
     service = build("drive", "v3", credentials=creds)
@@ -112,7 +111,7 @@ def send_receipt_to_cloud(receipt_path: str, photo_file) -> str:
         image_uuid = receipt_path
         file_metadata = {
             "name": f"{image_uuid}.jpg",
-            "parents": [FOLDER_ID],
+            "parents": [DRIVE_FOLDER_ID],
         }
 
         # Upload the file object directly to Google Drive
@@ -151,18 +150,18 @@ def export_claim(department, name, category, amount, receipt_id):
 
     creds = None
 
-    if os.path.exists(TOKEN_PATH):
-        creds = Credentials.from_authorized_user_file(TOKEN_PATH, SCOPES)
+    if os.path.exists(SHEET_TOKEN_PATH):
+        creds = Credentials.from_authorized_user_file(SHEET_TOKEN_PATH, SHEETS_SCOPES)
 
     # If no valid credentials are available, log in again
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())  # refresh the token if it’s expired
         else:
-            flow = InstalledAppFlow.from_client_secrets_file(CREDENTIALS_PATH, SCOPES)
+            flow = InstalledAppFlow.from_client_secrets_file(CREDENTIALS_PATH, SHEETS_SCOPES)
             creds = flow.run_local_server(port=0)
 
-        with open(TOKEN_PATH, "w") as token:
+        with open(SHEET_TOKEN_PATH, "w") as token:
             token.write(creds.to_json())
 
     try:
