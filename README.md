@@ -1,10 +1,9 @@
-# TeleBot for Nepal Trip - Claim Management Bot
+# TeleBot for Nepal Trip
 
-A utility telegram bot for the STEER Nepal trip Provides some admin features for the finance team.
-
+A utility telegram bot for the STEER Nepal trip. Provides some admin features for the finance team.
 
 ## Table of Contents
-- [TeleBot for Nepal Trip - Claim Management Bot](#telebot-for-nepal-trip---claim-management-bot)
+- [TeleBot for Nepal Trip](#telebot-for-nepal-trip)
   - [Table of Contents](#table-of-contents)
   - [Features](#features)
 - [Additional feature needed:](#additional-feature-needed)
@@ -97,10 +96,8 @@ Before setting up the bot, ensure you have the following:
 1. **Set Up Environment Variables**:
    Create a `.env` file in the root directory to store your bot token and other important configurations:
    ```bash
-   BOT_TOKEN=your-telegram-bot-token
+   BOT_TOKEN="your-telegram-bot-token"
    SAMPLE_SPREADSHEET_ID=your-google-sheet-id
-   SHEET_TOKEN_PATH=sheet_token.json
-   DRIVE_TOKEN_PATH=drive_token.json
    DRIVE_FOLDER_ID=your-google-drive-folder-id
    ```
 
