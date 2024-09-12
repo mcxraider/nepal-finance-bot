@@ -19,13 +19,13 @@ SAMPLE_SPREADSHEET_ID = os.environ['SAMPLE_SPREADSHEET_ID']
 DRIVE_FOLDER_ID = os.environ['DRIVE_FOLDER_ID']
 
 # Load in config file
-def load_config():
-    with open("config.yaml", "r") as file:
+def load_config(config_path):
+    with open(config_path, "r") as file:
         config = yaml.safe_load(file)
     return config
 
 # Load the config 
-config = load_config()
+config = load_config(config_path="../config.yaml")
 
 SHEETS_SCOPES = config['sheets']['scopes']
 G_DRIVE_SCOPES = config['drive']['scopes']
