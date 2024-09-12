@@ -75,7 +75,7 @@ Before setting up the bot, ensure you have the following:
 1. **Clone the repository**:
    ```bash
    git clone https://github.com/your-username/nepal-finance.git
-   cd nepal-telebot
+   cd nepal-finance
    ```
 
 2. **Create a Virtual Environment**:
@@ -175,12 +175,12 @@ NEPAL-FINANCE/
 
 ## Contributing
 
-Feel free to contribute with PRs!
+Feel free to contribute with PRs...
 Code is quite bad atm, sorry.
 
 ### Linting
 
-Before making a PR, make sure to lint your code with [black](https://github.com/psf/black).
+Before making a PR, make sure to lint your code with [black](https://github.com/psf/black). (For consistent formatting)
 
 ```bash
 black .
