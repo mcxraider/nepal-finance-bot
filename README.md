@@ -21,8 +21,8 @@ A utility telegram bot for the STEER Nepal trip Provides some admin features for
     - [**Check Claim Status Flow**:](#check-claim-status-flow)
   - [Project Structure](#project-structure)
   - [Contributing](#contributing)
+    - [How to Contribute](#how-to-contribute)
     - [Linting](#linting)
-    - [Working with Github](#working-with-github)
     - [Working with python-telegram-bot](#working-with-python-telegram-bot)
 
 ## Features
@@ -175,19 +175,61 @@ NEPAL-FINANCE/
 
 ## Contributing
 
-Feel free to contribute with PRs...
-Code is quite bad atm, sorry.
+> **Note**: Please contribute with PRs... Code is quite bad atm, sorry.
+
+### How to Contribute
+
+1. **Fork the Repository**:
+   - Navigate to the [repository page](https://github.com/your-username/nepal-finance) on GitHub and click the **Fork** button.
+   - This will create a copy of the repository under your own GitHub account.
+
+2. **Clone Your Fork**:
+   - Clone the forked repository to your local machine using the following command:
+     ```bash
+     git clone https://github.com/your-username/nepal-finance.git
+     cd nepal-finance
+     ```
+
+3. **Create a New Branch**:
+   - Create a new branch to work on a specific feature or fix. Make sure to name the branch descriptively so it’s clear what you're working on:
+     ```bash
+     git checkout -b feature/your-feature-name
+     ```
+
+4. **Make Your Changes**:
+   - Implement your feature or bug fix in the newly created branch.
+   - Commit your changes using clear and concise commit messages:
+     ```bash
+     git add .
+     git commit -m "Add feature/fix description here"
+     ```
+
+5. **Push Your Branch**:
+   - Push the changes to your forked repository on GitHub:
+     ```bash
+     git push origin feature/your-feature-name
+     ```
+
+6. **Create a Pull Request (PR)**:
+   - After pushing your branch, go to your forked repository on GitHub.
+   - You will see a prompt to create a pull request. Click on that button or go to the **Pull Requests** tab, then click **New Pull Request**.
+   - Compare your branch with the `main` branch of the original repository and submit the pull request with a clear title and description of the changes.
+
+7. **Wait for Review**:
+   - If the changes are alright the PR will be merged into the main repository
 
 ### Linting
 
-Before making a PR, make sure to lint your code with [black](https://github.com/psf/black). (For consistent formatting)
+Before submitting a pull request, please ensure your code follows the project's coding style by using [black](https://github.com/psf/black). This helps to keep the formatting consistent across the project.
+
+To format your code with `black`, run the following command:
 
 ```bash
 black .
 ```
 
-### Working with Github
-- [Creating a pull request from a fork](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request-from-a-fork)
+This will automatically format your code according to the `black` style guide.
+
 
 ### Working with python-telegram-bot
 - [Introduction to the API](https://github.com/python-telegram-bot/v13.x-wiki/wiki/Introduction-to-the-API)
