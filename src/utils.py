@@ -1,190 +1,146 @@
-import os
-import io
-import pandas as pd
-from datetime import datetime
+import uuid
+from telegram import Update, ReplyKeyboardMarkup, ReplyKeyboardRemove
+from telegram.ext import (
+    CallbackContext,
+    
+)
 
-from google.auth.transport.requests import Request
-from google.oauth2.credentials import Credentials
-from google_auth_oauthlib.flow import InstalledAppFlow
-from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
-from googleapiclient.http import MediaIoBaseUpload
-from google.oauth2.credentials import Credentials
-from googleapiclient.discovery import build
+from drive_connector import *
+from error_handling import *
 
-
-# Scopes define the level of access we're requesting, for now we can read and write
-SHEETS_SCOPES  = ["https://www.googleapis.com/auth/spreadsheets"]
-G_DRIVE_SCOPES = ['https://www.googleapis.com/auth/drive.file']
-
-SAMPLE_SPREADSHEET_ID = "1gNMdlnevrfawztpJdujWn54WxohZB9pLD5KG5EapImM"
-SAMPLE_RANGE_NAME = "Sheet1!A:M"
-CREDENTIALS_PATH = "../credentials.json"
-SHEET_TOKEN_PATH = "../sheet_token.json"
-DRIVE_TOKEN_PATH = "../drive_token.json"
-
-DRIVE_FOLDER_ID = "1KEAQLm2S_R11y9N7C7pVW5FTmXu6i07A"
-
-def fetch_sheet():
-    """
-    Fetches data from the excel sheet and stores returns it as a pandas dataframe
-    """
-
-    creds = None
-
-    # Check if token.json exists and load it if it does
-    # Need better error handling for this
-    if os.path.exists(SHEET_TOKEN_PATH):
-        creds = Credentials.from_authorized_user_file(SHEET_TOKEN_PATH, SHEETS_SCOPES)
-
-    # If no valid credentials are available, log in again
-    if not creds or not creds.valid:
-        if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())  # refresh the token if it’s expired
-        else:
-            # log in and get new credentials
-            flow = InstalledAppFlow.from_client_secrets_file(CREDENTIALS_PATH, SHEETS_SCOPES)
-            creds = flow.run_local_server(port=0)
-
-        # Save the credentials for future runs
-        with open(SHEET_TOKEN_PATH, "w") as token:
-            token.write(creds.to_json())
-
-    try:
-        # Call the Sheets API
-        service = build("sheets", "v4", credentials=creds)
-        sheet = service.spreadsheets()
-        result = (
-            sheet.values()
-            .get(spreadsheetId=SAMPLE_SPREADSHEET_ID, range=SAMPLE_RANGE_NAME)
-            .execute()
-        )
-        # retrieve the sheet data
-        sheet = result.get("values", [])
-
-        # Check if there's data in the sheet
-        if not sheet:
-            return "No data found in the Google Sheet."
-
-        # Here the sheet is a pandas dataframe
-        df = pd.DataFrame(sheet[1:], columns=sheet[0])
-
-        return df
-
-    except HttpError as err:
-        return f"An error occurred: {err}"
-
-
-def get_claim_status(df, id):
-    try:
-        status_msg = df[df["Claim ID"] == id]["Approval Status"].values[0]
-    except IndexError:
-        return {"error": True, "status_msg": id}
-
-    return {"error": False, "status_msg": status_msg}
-
-
-def send_receipt_to_cloud(receipt_path: str, photo_file) -> str:
-    """Uploads the receipt to a pre-defined folder in Google Drive and returns the file ID."""
-
-    creds = None
-
-    if os.path.exists(DRIVE_TOKEN_PATH):
-        creds = Credentials.from_authorized_user_file(DRIVE_TOKEN_PATH, G_DRIVE_SCOPES)
-
-    if not creds or not creds.valid:
-        if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())  # refresh the token if it’s expired
-        else:
-            # Log in and get new credentials
-            flow = InstalledAppFlow.from_client_secrets_file(CREDENTIALS_PATH, G_DRIVE_SCOPES)
-            creds = flow.run_local_server(port=0)
-
-        with open(DRIVE_TOKEN_PATH, "w") as token:
-            token.write(creds.to_json())
-
-    service = build("drive", "v3", credentials=creds)
-
-    # Validate the MIME type to ensure it's a JPG
-    if photo_file.file_path.endswith(".jpg") or photo_file.file_path.endswith(".jpeg"):
-        # Use a unique file name for the receipt using the UUID
-        image_uuid = receipt_path
-        file_metadata = {
-            "name": f"{image_uuid}.jpg",
-            "parents": [DRIVE_FOLDER_ID],
-        }
-
-        # Upload the file object directly to Google Drive
-        receipt_stream = io.BytesIO(photo_file.download_as_bytearray())
-        media = MediaIoBaseUpload(receipt_stream, mimetype="image/jpeg")
-
-        # Upload the file to Google Drive inside the folder
-        file = (
-            service.files()
-            .create(body=file_metadata, media_body=media, fields="id")
-            .execute()
-        )
-        return
-
-    else:
-        raise ValueError("File type is not JPG")
-
-
-def export_claim(department, name, category, amount, receipt_id):
-    """
-    Appends a new claim to the Google Sheet.
-    """
-
-    current_date = datetime.now().strftime("%Y/%m/%d")
-
-    new_row = [
-        receipt_id,
-        department,
-        name,
-        current_date,
-        category,
-        amount,
-        "Pending",
-        "Yes",
+def get_main_menu_keyboard() -> ReplyKeyboardMarkup:
+    """Generates the main menu reply keyboard for the user"""
+    reply_keyboard = [
+        ["Submit a Claim", "Check Claim Status", "Submit Proof of Payment"]
     ]
+    
+    return ReplyKeyboardMarkup(
+        reply_keyboard,
+        one_time_keyboard=True,
+        input_field_placeholder="Select one of the options below",
+    )
 
-    creds = None
 
-    if os.path.exists(SHEET_TOKEN_PATH):
-        creds = Credentials.from_authorized_user_file(SHEET_TOKEN_PATH, SHEETS_SCOPES)
+# Helper function to generate a UUID for the image
+def generate_uuid() -> str:
+    """Generates a unique UUID for the receipt image."""
+    return str(uuid.uuid4())
 
-    # If no valid credentials are available, log in again
-    if not creds or not creds.valid:
-        if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())  # refresh the token if it’s expired
+def send_claim_confirmation(update: Update, context: CallbackContext) -> None:
+    """Sends a confirmation message with the claim summary."""
+    department = context.user_data.get("department", "").capitalize()
+    name = context.user_data.get("name", "").capitalize()
+    category = context.user_data.get("category", "").capitalize()
+    amount = context.user_data.get("amount", "").capitalize()
+    receipt_id = context.user_data.get("receipt_uuid", "").capitalize()
+
+    # Ensure the amount is formatted correctly
+    if "$" not in amount:
+        amount = "$" + amount
+
+    confirmation_message = (
+        "🧾 *Your Claim Summary* 🧾\n"
+        "=============================\n"
+        f"📌 *Department*: {department}\n"
+        f"👤 *Name*: {name}\n"
+        f"💼 *Expense Category*: {category}\n"
+        f"💰 *Amount*: {amount}\n"
+        "-----------------------------\n"
+        f"🆔 *Claim ID*: `{receipt_id}`\n(Please *copy* this ID and keep it!)\n"
+        "=============================\n"
+    )
+
+    update.message.reply_text(confirmation_message, parse_mode="Markdown")
+
+
+def export_claim_details(context: CallbackContext) -> None:
+    """Exports the claim details to Google Sheets."""
+    department = context.user_data.get("department", "").capitalize()
+    name = context.user_data.get("name", "").capitalize()
+    category = context.user_data.get("category", "").capitalize()
+    amount = context.user_data.get("amount", "").capitalize()
+    receipt_id = context.user_data.get("receipt_uuid", "").capitalize()
+
+    export_claim(department, name, category, amount, receipt_id)
+
+
+def handle_claim_status_check(update: Update, context: CallbackContext, claim_id: str) -> None:
+    """Fetches claim status based on the claim ID provided by the user."""
+    data   = fetch_sheet()
+    status = get_claim_status(data, claim_id)
+
+    if status["error"]:
+        update.message.reply_text(f"Invalid claim ID. {status['status_msg']} is not valid.")
+    else:
+        answer = status["status_msg"]
+        if answer in ["Approved", "Rejected"]:
+            update.message.reply_text(f"Claim ID: {claim_id} has been {answer}")
+        # if status pending
         else:
-            flow = InstalledAppFlow.from_client_secrets_file(CREDENTIALS_PATH, SHEETS_SCOPES)
-            creds = flow.run_local_server(port=0)
+            update.message.reply_text(f"Claim ID: {claim_id} is still {answer}")
 
-        with open(SHEET_TOKEN_PATH, "w") as token:
-            token.write(creds.to_json())
+    context.user_data["waiting_for_claim_id"] = False
 
-    try:
-        # Call the Google Sheets API
-        service = build("sheets", "v4", credentials=creds)
-        sheet = service.spreadsheets()
+def handle_department_input(update: Update, context: CallbackContext, department: str) -> None:
+    """Handles user input for the department during claim submission."""
+    context.user_data["department"] = department
+    context.user_data["waiting_for_department"] = False
+    context.user_data["waiting_for_name"] = True
+    update.message.reply_text("Please enter your name:")
 
-        # appending the new row
-        request = sheet.values().append(
-            spreadsheetId=SAMPLE_SPREADSHEET_ID,
-            range=SAMPLE_RANGE_NAME,
-            valueInputOption="RAW",
-            insertDataOption="INSERT_ROWS",
-            body={"values": [new_row]},
-        )
-        response = request.execute()
+def handle_name_input(update: Update, context: CallbackContext, name: str) -> None:
+    """Handles user input for the name during claim submission."""
+    context.user_data["name"] = name
+    context.user_data["waiting_for_name"] = False
+    context.user_data["waiting_for_category"] = True
+    update.message.reply_text("What are you claiming for?")
 
-        print(f"Claim successfully appended to Sheet ID {response['spreadsheetId']}")
+def handle_category_input(update: Update, context: CallbackContext, category: str) -> None:
+    """Handles user input for the category during claim submission."""
+    context.user_data["category"] = category
+    context.user_data["waiting_for_category"] = False
+    context.user_data["waiting_for_amount"] = True
+    update.message.reply_text("Please enter the amount to claim:")
 
-    except HttpError as err:
-        print(f"An error occurred: {err}")
-        return
+def handle_amount_input(update: Update, context: CallbackContext, amount: str) -> None:
+    """Handles user input for the amount during claim submission."""
+    context.user_data["amount"] = amount
+    context.user_data["waiting_for_receipt"] = True
+    update.message.reply_text("Please upload a picture of the receipt.", reply_markup=ReplyKeyboardRemove())
+    context.user_data["waiting_for_amount"] = False
 
+def initiate_claim_submission(update: Update, context: CallbackContext) -> None:
+    """Starts the claim submission process by asking for the department."""
+    context.user_data["waiting_for_department"] = True
+    update.message.reply_text("Please enter the department:")
 
-if __name__ == "__main__":
-    fetch_sheet()
+def initiate_claim_status_check(update: Update, context: CallbackContext) -> None:
+    """Starts the claim status check process by asking for the claim ID."""
+    context.user_data["waiting_for_claim_id"] = True
+    update.message.reply_text("Please enter your claim ID:", reply_markup=ReplyKeyboardRemove())
+
+def handle_receipt_submission(update: Update, context: CallbackContext) -> None:
+    """Handles the logic when a receipt is submitted by the user."""
+    if update.message.photo:
+        photo_file = update.message.photo[-1].get_file()  
+        context.user_data["image"] = photo_file
+
+        image_uuid = generate_uuid()
+        receipt_path = f"{image_uuid}"
+
+        try:
+            # Send the receipt to Google Drive
+            send_receipt_to_cloud(receipt_path, photo_file)
+            update.message.reply_text("Receipt received! Thank you for submitting your claim.")
+            
+            # Store the UUID for reference and send confirmation
+            context.user_data["receipt_uuid"] = receipt_path
+            send_claim_confirmation(update, context)
+
+            # Export claim details to Google Sheets
+            export_claim_details(context)
+        except ValueError:
+            handle_invalid_image(update)
+    else:
+        # If no photo is provided, ask for a valid photo
+        request_valid_image(update)
