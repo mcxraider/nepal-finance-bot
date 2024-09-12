@@ -152,6 +152,7 @@ def send_receipt_to_cloud(receipt_path: str, photo_file) -> str:
 def current_datetime():
     return datetime.now().strftime("%Y-%m-%d")
 
+
 def export_claim_details(context: CallbackContext):
     """
     Appends a new claim to the Google Sheet.

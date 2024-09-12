@@ -32,6 +32,7 @@ def generate_uuid() -> str:
     """Generates a unique UUID for the receipt image."""
     return str(uuid.uuid4())
 
+
 def get_department_keyboard() -> InlineKeyboardMarkup:
     """Creates an inline keyboard for department selection."""
     keyboard = [
@@ -88,7 +89,9 @@ def handle_department_input(
         context.user_data["department"] = user_response
         context.user_data["waiting_for_department"] = False
         context.user_data["waiting_for_name"] = True
-        update.message.reply_text(f"Department Selected: {user_response}", reply_markup=ReplyKeyboardRemove())
+        update.message.reply_text(
+            f"Department Selected: {user_response}", reply_markup=ReplyKeyboardRemove()
+        )
         update.message.reply_text(
             "Please enter your name:", reply_markup=ReplyKeyboardRemove()
         )
@@ -136,7 +139,9 @@ def handle_amount_input(
 
     context.user_data["amount"] = amount
     context.user_data["waiting_for_description"] = True
-    update.message.reply_text(f"Amount to claim: {amount}", reply_markup=ReplyKeyboardRemove())
+    update.message.reply_text(
+        f"Amount to claim: {amount}", reply_markup=ReplyKeyboardRemove()
+    )
     update.message.reply_text(
         "Please provide a brief description of the claim you are making:",
         reply_markup=ReplyKeyboardRemove(),
@@ -199,6 +204,7 @@ def handle_claim_status_check(
 
     context.user_data["waiting_for_claim_id"] = False
 
+
 def send_user_claim_confirmation(update: Update, context: CallbackContext) -> None:
     """Sends a confirmation message with the claim summary."""
     department = context.user_data.get("department", "").capitalize()
@@ -238,12 +244,10 @@ def handle_receipt_submission(update: Update, context: CallbackContext) -> None:
 
             # Store the UUID for reference and send confirmation
             context.user_data["receipt_uuid"] = receipt_path
-            update.message.reply_text(
-                "Image submitted!"
-            )
+            update.message.reply_text("Image submitted!")
             send_user_claim_confirmation(update, context)
 
-            # Export claim details to Google Drive 
+            # Export claim details to Google Drive
             export_claim_details(context)
         except ValueError:
             handle_invalid_image(update)
