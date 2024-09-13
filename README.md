@@ -187,15 +187,13 @@ NEPAL-FINANCE/
 
 ### Linting
 
-Before submitting a pull request, please ensure your code follows the project's coding style by using [black](https://github.com/psf/black). This helps to keep the formatting consistent across the project.
+Before submitting a pull request, please ensure your code follows the project's coding style by using [black](https://github.com/psf/black). This helps to keep the formatting consistent across the codebase.
 
 To format your code with `black`, run the following command:
 
 ```bash
 black .
 ```
-
-This will automatically format your code according to the `black` style guide.
 
 
 ### Working with python-telegram-bot
