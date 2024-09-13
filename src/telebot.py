@@ -31,7 +31,7 @@ def start(update: Update, context: CallbackContext) -> None:
 
     update.message.reply_text(
         "Hi Welcome to the Nepal Finance Bot! What would you like to do?",
-        reply_markup=get_main_menu_keyboard(3,2)
+        reply_markup=get_main_menu_keyboard(3, 2),
     )
 
 
@@ -87,7 +87,7 @@ def end_conversation(update: Update, context: CallbackContext) -> None:
     context.user_data.clear()
     update.message.reply_text(
         "👋 Thanks! Feel free to choose an option below to continue whenever you're ready.",
-        reply_markup=get_main_menu_keyboard(3,2)
+        reply_markup=get_main_menu_keyboard(3, 2),
     )
 
 

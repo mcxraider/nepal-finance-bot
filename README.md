@@ -14,11 +14,7 @@ A utility telegram bot for the STEER Nepal trip. Provides some admin features fo
   - [Installation](#installation)
   - [Bot Configuration](#bot-configuration)
   - [Running the Bot](#running-the-bot)
-  - [Bot Commands and Interactions](#bot-commands-and-interactions)
-    - [`/start`](#start)
-    - [**Submit a Claim Flow**:](#submit-a-claim-flow)
-    - [**Check Claim Status Flow**:](#check-claim-status-flow)
-  - [Project Structure](#project-structure)
+  - [File Structure](#file-structure)
   - [Contributing](#contributing)
     - [How to Contribute](#how-to-contribute)
     - [Linting](#linting)
@@ -97,8 +93,8 @@ Before setting up the bot, ensure you have the following:
    Create a `.env` file in the root directory to store your bot token and other important configurations:
    ```bash
    BOT_TOKEN="your-telegram-bot-token"
-   SAMPLE_SPREADSHEET_ID=your-google-sheet-id
-   DRIVE_FOLDER_ID=your-google-drive-folder-id
+   SAMPLE_SPREADSHEET_ID="your-google-sheet-id"
+   DRIVE_FOLDER_ID="your-google-drive-folder-id"
    ```
 
 2. **Obtain OAuth Tokens**:
@@ -107,47 +103,21 @@ Before setting up the bot, ensure you have the following:
 ## Running the Bot
 
 1. **Run the bot**:
-   Once everything is set up, navigate to the src folder
+   Once everything is set up, navigate to the src folder and run the bot using:
    ```bash
    cd src
-   ```
-   
-   Then, run the bot using:
-   ```bash
-   python3 telebot.py
+   python telebot.py
    ```
 
-2. **Authorization**:
+1. **Authorization**:
    - When running the bot for the first time, a browser window will pop up, prompting you to log in and authorize the Google Sheets and Drive APIs. 
    - This will create the `sheet_token.json` and `drive_token.json` files for future sessions.
 
-3. **Bot Activation**:
-   Once the bot is running, start interacting with it by searching for it in Telegram with the username `@nepalfinancebot` and typing `/start`.
+2. **Bot Activation**:
+   Once the bot is running, start interacting with it by searching for it in Telegram with the username `@nepalfinancebot`.
 
-## Bot Commands and Interactions
 
-### `/start`
-- Initiates the conversation and presents options to the user:
-  - **Submit a Claim**: Start the process of submitting a financial claim.
-  - **Check Claim Status**: Check the status of an existing claim by entering the claim ID.
-  - **Submit Proof of Payment**: (Future feature).
-
-### **Submit a Claim Flow**:
-1. User selects "Submit a Claim".
-2. The bot prompts the user to enter:
-   - Department
-   - Name
-   - Expense Category
-   - Amount
-   - Upload receipt photo (JPG format)
-3. The bot stores the receipt in Google Drive and logs the claim in the Google Sheet.
-
-### **Check Claim Status Flow**:
-1. User selects "Check Claim Status".
-2. The bot prompts the user to enter a Claim ID.
-3. The bot retrieves the status from the Google Sheet and responds with the result (Approved, Pending, Rejected).
-
-## Project Structure
+## File Structure
 
 ```
 NEPAL-FINANCE/

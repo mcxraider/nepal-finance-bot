@@ -10,6 +10,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 from utils import get_main_menu_keyboard
 
+
 def error_handler(update: Update, context: CallbackContext) -> None:
     """Log the error and send a message to the user."""
     # Log the error with additional context
@@ -56,6 +57,7 @@ def throw_text_error(update: Update, context: CallbackContext) -> None:
     update.message.reply_text(
         "Sorry, only images are allowed! ⚠️ Please upload an image of your receipt."
     )
+
 
 def non_image_handler(update: Update, context: CallbackContext) -> None:
     """Handles cases where the user sends non-photo files like .ipynb or other documents."""
@@ -104,7 +106,7 @@ def notify_payment_feature_coming(update: Update) -> None:
     """Notifies the user that the proof of payment feature is coming soon."""
     update.message.reply_text(
         "🚧 This feature is coming soon. Stay tuned:)",
-        reply_markup=get_main_menu_keyboard(3,2),
+        reply_markup=get_main_menu_keyboard(3, 2),
         parse_mode="Markdown",
     )
 
@@ -125,5 +127,5 @@ def unknown_command(update: Update, context: CallbackContext) -> None:
     """
     update.message.reply_text(
         "⚠️ Sorry, that is not a valid command!\n\nHere are the available commands:\n /start - Start a new chat!\n/end - Reset conversation!",
-        parse_mode="Markdown"
+        parse_mode="Markdown",
     )

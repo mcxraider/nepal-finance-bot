@@ -1,13 +1,7 @@
 import uuid
 import re
-from telegram import (
-    Update,
-    ReplyKeyboardMarkup,
-    ReplyKeyboardRemove
-)
-from telegram.ext import (
-    CallbackContext
-)
+from telegram import Update, ReplyKeyboardMarkup, ReplyKeyboardRemove
+from telegram.ext import CallbackContext
 
 from drive_connector import *
 from error_handling import *
@@ -25,30 +19,46 @@ def get_bot_api_key(key: str) -> str:
     return value.strip()
 
 
-def create_reply_keyboard(options: list[str], rows: int, columns: int, placeholder: str = None) -> ReplyKeyboardMarkup:
+def create_reply_keyboard(
+    options: list[str], rows: int, columns: int, placeholder: str = None
+) -> ReplyKeyboardMarkup:
     """
     Generates a dynamic reply keyboard for the user based on the provided shape (rows and columns).
     """
     # Create the keyboard layout based on the given rows and columns
-    keyboard_layout = [options[i:i + columns] for i in range(0, len(options), columns)]
+    keyboard_layout = [
+        options[i : i + columns] for i in range(0, len(options), columns)
+    ]
 
     return ReplyKeyboardMarkup(
         keyboard_layout,
         one_time_keyboard=True,
         input_field_placeholder=placeholder,
-        selective=True  # Ensures only the user sees the keyboard
+        selective=True,  # Ensures only the user sees the keyboard
     )
+
 
 def get_main_menu_keyboard(rows: int, columns: int) -> ReplyKeyboardMarkup:
     """Generates the main menu reply keyboard for the user with custom rows and columns."""
     options = ["Submit a Claim", "Check Claim Status", "Submit Proof of Payment"]
-    return create_reply_keyboard(options, rows, columns, placeholder="Select one of the options below")
+    return create_reply_keyboard(
+        options, rows, columns, placeholder="Select one of the options below"
+    )
 
 
 def get_department_keyboard(rows: int, columns: int) -> ReplyKeyboardMarkup:
     """Creates a dynamic reply keyboard for department selection."""
-    options = ["Logistics", "Finance", "First Aid", "Blog", "Publicity", "Flights & Accoms"]
-    return create_reply_keyboard(options, rows, columns, placeholder="Select your department")
+    options = [
+        "Logistics",
+        "Finance",
+        "First Aid",
+        "Blog",
+        "Publicity",
+        "Flights & Accoms",
+    ]
+    return create_reply_keyboard(
+        options, rows, columns, placeholder="Select your department"
+    )
 
 
 def generate_uuid() -> str:
@@ -67,12 +77,12 @@ def handle_department_input(
         "First Aid",
         "Finance",
         "Blog",
-        "Publicity"
+        "Publicity",
     ]
 
     # If user hasn't selected yet, show the keyboard
     if user_response not in valid_departments:
-        reply_markup = get_department_keyboard(2,3)
+        reply_markup = get_department_keyboard(2, 3)
         update.message.reply_text(
             "Please choose your department:", reply_markup=reply_markup
         )
@@ -112,7 +122,7 @@ def handle_category_input(
     )
 
 
-def filter_valid_amount(amount: str, pattern = r"\$?\d+(\.\d{0,2})?") -> str:
+def filter_valid_amount(amount: str, pattern=r"\$?\d+(\.\d{0,2})?") -> str:
     """Filters the input and keeps only valid amount format."""
     if "$" not in amount:
         amount = "$" + amount
@@ -157,7 +167,7 @@ def handle_description_input(
 def initiate_claim_submission(update: Update, context: CallbackContext) -> None:
     """Initiates the claim submission process by showing department selection."""
 
-    reply_markup = get_department_keyboard(3,2)
+    reply_markup = get_department_keyboard(3, 2)
     update.message.reply_text(
         "Please choose your department:", reply_markup=reply_markup
     )
@@ -173,13 +183,15 @@ def initiate_claim_status_check(update: Update, context: CallbackContext) -> Non
         "Please enter the ID of your claim:", reply_markup=ReplyKeyboardRemove()
     )
 
+
 def handle_invalid_claim_id(update: Update, context: CallbackContext, status):
-        update.message.reply_text(
-            f"⚠️ Oops! It seems like the claim ID '{status['status_msg']}' is invalid.\n"
-            "Please double-check the ID restart the claim checking process!\n"
-            "Restart conversation: /start"
-        )
-        
+    update.message.reply_text(
+        f"⚠️ Oops! It seems like the claim ID '{status['status_msg']}' is invalid.\n"
+        "Please double-check the ID restart the claim checking process!\n"
+        "Restart conversation: /start"
+    )
+
+
 def handle_claim_status_check(
     update: Update, context: CallbackContext, claim_id: str
 ) -> None:
@@ -227,7 +239,11 @@ def send_user_claim_confirmation(update: Update, context: CallbackContext) -> No
         "=============================\n"
     )
 
-    update.message.reply_text(confirmation_message, reply_markup=get_main_menu_keyboard(3,2), parse_mode="Markdown")
+    update.message.reply_text(
+        confirmation_message,
+        reply_markup=get_main_menu_keyboard(3, 2),
+        parse_mode="Markdown",
+    )
 
 
 def image_handler(update: Update, context: CallbackContext) -> None:
