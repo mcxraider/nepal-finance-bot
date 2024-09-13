@@ -4,9 +4,7 @@ import pandas as pd
 from datetime import datetime
 from dotenv import load_dotenv
 import yaml
-from telegram.ext import (
-    CallbackContext,
-)
+from telegram.ext import CallbackContext
 
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials

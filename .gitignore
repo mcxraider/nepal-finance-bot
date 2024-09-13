@@ -3,4 +3,4 @@ venv
 credentials.json
 drive_token.json
 sheet_token.json
-src/__pycache__
+src/__pycache__/

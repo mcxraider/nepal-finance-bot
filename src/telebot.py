@@ -1,5 +1,7 @@
 import os
 from dotenv import load_dotenv
+
+load_dotenv()
 import logging
 from telegram import Update
 from telegram.ext import (
@@ -7,6 +9,7 @@ from telegram.ext import (
     CommandHandler,
     MessageHandler,
     Filters,
+    CallbackContext,
     CallbackContext,
 )
 
@@ -22,18 +25,13 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
-load_dotenv()
-BOT_TOKEN = os.environ["BOTAPI_KEY"]
-
 
 def start(update: Update, context: CallbackContext) -> None:
     """Sends a greeting and asks what the user wants to do"""
 
-    reply_markup = get_main_menu_keyboard()
-
     update.message.reply_text(
         "Hi Welcome to the Nepal Finance Bot! What would you like to do?",
-        reply_markup=reply_markup,
+        reply_markup=get_main_menu_keyboard(3,2)
     )
 
 
@@ -65,12 +63,9 @@ def handle_response(update: Update, context: CallbackContext) -> None:
         handle_description_input(update, context, user_response)
         return
 
-    # If waiting for an image but the user sends text, treat it as a non-image submission
     if context.user_data.get("waiting_for_receipt"):
-        update.message.reply_text(
-            "Sorry, only images are allowed! ⚠️ Please upload an image of your receipt."
-        )
-        # non_image_handler(update, context)
+        # If waiting for an image but the user sends text, treat it as a non-image submission
+        throw_text_error(update, context)
         return
 
     # Handle the main menu options
@@ -85,46 +80,46 @@ def handle_response(update: Update, context: CallbackContext) -> None:
         notify_invalid_option(update)
 
 
-def image_handler(update: Update, context: CallbackContext) -> None:
+def end_conversation(update: Update, context: CallbackContext) -> None:
     """
-    Handles the receipt image sent by the user.
+    Handler to end the conversation.
     """
-    if context.user_data.get("waiting_for_receipt"):
-        handle_receipt_submission(update, context)
-        context.user_data["waiting_for_receipt"] = False
+    context.user_data.clear()
+    update.message.reply_text(
+        "👋 Thanks! Feel free to choose an option below to continue whenever you're ready.",
+        reply_markup=get_main_menu_keyboard(3,2)
+    )
 
 
 def main() -> None:
     """
     Main function to start the bot.
     """
-
-    # Create the Updater and pass it your bot's token
-    updater = Updater(token=BOT_TOKEN, use_context=True)
-
-    # Get the dispatcher to register handlers
+    # Fetch the bot token from environment variables for security
+    updater = Updater(token=get_bot_api_key("BOTAPI_KEY"), use_context=True)
     dispatcher = updater.dispatcher
 
-    # Add the start command handler
+    # Command Handlers
     dispatcher.add_handler(CommandHandler("start", start))
+    dispatcher.add_handler(CommandHandler("end", end_conversation))
 
-    # Add a generic message handler for non-command messages
+    # Message Handlers
     dispatcher.add_handler(
         MessageHandler(Filters.text & ~Filters.command, handle_response)
     )
-
-    # Add handler for receipt image (photo)
     dispatcher.add_handler(MessageHandler(Filters.photo, image_handler))
-
-    # Add a generic handler for other file/document types
     dispatcher.add_handler(MessageHandler(Filters.document, non_image_handler))
 
-    # Log all errors
+    # unrecognisable commands
+    dispatcher.add_handler(MessageHandler(Filters.command, unknown_command))
+
+    # Error Handler
     dispatcher.add_error_handler(error_handler)
 
-    # Start the Bot
+    # Start polling to run the bot
     updater.start_polling()
 
+    # Keep the bot running until interrupted
     updater.idle()
 
 

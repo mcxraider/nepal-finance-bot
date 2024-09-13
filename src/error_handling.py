@@ -8,7 +8,7 @@ logging.basicConfig(
 )
 
 logger = logging.getLogger(__name__)
-
+from utils import get_main_menu_keyboard
 
 def error_handler(update: Update, context: CallbackContext) -> None:
     """Log the error and send a message to the user."""
@@ -17,7 +17,10 @@ def error_handler(update: Update, context: CallbackContext) -> None:
 
     # Notify the user that an error occurred
     update.message.reply_text(
-        "An unexpected error occurred. Please try again or contact support if the issue persists."
+        "An unexpected error occurred. Please try again. \
+        If the issue persists, please contact me @jer_jerryyy",
+        # Please add ur tele handles here so people can contact us
+        parse_mode="Markdown",
     )
 
 
@@ -49,6 +52,11 @@ def request_valid_image(update: Update) -> None:
     )
 
 
+def throw_text_error(update: Update, context: CallbackContext) -> None:
+    update.message.reply_text(
+        "Sorry, only images are allowed! ⚠️ Please upload an image of your receipt."
+    )
+
 def non_image_handler(update: Update, context: CallbackContext) -> None:
     """Handles cases where the user sends non-photo files like .ipynb or other documents."""
     if update.message.document:
@@ -60,7 +68,6 @@ def non_image_handler(update: Update, context: CallbackContext) -> None:
 def handle_non_image_file(update: Update, context: CallbackContext) -> None:
     """Handles the scenario where a user uploads a non-image file."""
     file_type = update.message.document.mime_type
-
     if is_valid_non_image_file(file_type):
         update.message.reply_text(
             "📝 *It looks like you uploaded a non-image file.*\n\n"
@@ -68,8 +75,8 @@ def handle_non_image_file(update: Update, context: CallbackContext) -> None:
         )
     else:
         update.message.reply_text(
-            "🚫 *Unsupported file type detected.*\n\n"
-            "Please upload a clear image of your receipt in *JPG* format."
+            "🚫 I'm Sorry, we currently do not support this file type*\n\n"
+            "Please upload an image of your receipt in *JPG* format."
         )
 
 
@@ -96,8 +103,9 @@ def request_valid_image(update: Update) -> None:
 def notify_payment_feature_coming(update: Update) -> None:
     """Notifies the user that the proof of payment feature is coming soon."""
     update.message.reply_text(
-        "🚧 *Hang tight!*\n\nThe *Submit Proof of Payment* feature is coming soon. Stay tuned for updates!",
-        reply_markup=ReplyKeyboardRemove(),
+        "🚧 This feature is coming soon. Stay tuned:)",
+        reply_markup=get_main_menu_keyboard(3,2),
+        parse_mode="Markdown",
     )
 
 
@@ -107,5 +115,15 @@ def notify_invalid_option(update: Update) -> None:
 
 It looks like you entered an *invalid option* or *command*. Don’t worry, it happens!
 
-👉 Please type `/start` to return to the main menu and explore the chat functions."""
+👉 Press /start to return to the main menu and explore the chat functions."""
     update.message.reply_text(error_message, parse_mode="Markdown")
+
+
+def unknown_command(update: Update, context: CallbackContext) -> None:
+    """
+    Handles unknown commands and sends an error message.
+    """
+    update.message.reply_text(
+        "⚠️ Sorry, that is not a valid command!\n\nHere are the available commands:\n /start - Start a new chat!\n/end - Reset conversation!",
+        parse_mode="Markdown"
+    )
