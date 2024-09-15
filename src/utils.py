@@ -205,12 +205,18 @@ def handle_claim_status_check(
     else:
         answer = status["status_msg"].lower()
         if answer in ["approved", "rejected"]:
+            # Format the message for approved or rejected claims
             update.message.reply_text(
-                f"✅ Your claim (ID: {claim_id}) has been {answer}!"
+                f"✅ *Status Update* \n\nYour claim (ID: `{claim_id}`) has been *{answer}*.\n\nThank you for your patience!",
+                reply_markup=get_main_menu_keyboard(3, 2),
+                parse_mode="Markdown",
             )
         else:
+            # Format the message for claims still in process
             update.message.reply_text(
-                f"⌛ Your claim (ID: {claim_id}) is still being processed! Please check back at a later time!"
+                f"⌛ *Processing Update* \n\nYour claim (ID: `{claim_id}`) is still being processed.\n\nPlease check back later for an update. We appreciate your understanding!",
+                reply_markup=get_main_menu_keyboard(3, 2),
+                parse_mode="Markdown",
             )
 
     context.user_data["waiting_for_claim_id"] = False
