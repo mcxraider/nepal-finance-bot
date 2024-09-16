@@ -1,6 +1,3 @@
 venv
 .env
-credentials.json
-drive_token.json
-sheet_token.json
-src/__pycache__/
+

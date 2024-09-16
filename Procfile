@@ -1,1 +1,1 @@
-worker: python src/telebot.py
+worker: python telebot.py

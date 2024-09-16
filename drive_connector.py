@@ -29,7 +29,7 @@ def load_config(config_path):
 
 
 # Load the config
-config = load_config(config_path="../config.yaml")
+config = load_config(config_path="config.yaml")
 
 SHEETS_SCOPES = config["sheets"]["scopes"]
 G_DRIVE_SCOPES = config["drive"]["scopes"]

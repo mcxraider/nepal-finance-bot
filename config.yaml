@@ -3,14 +3,14 @@ sheets:
   scopes:
     - "https://www.googleapis.com/auth/spreadsheets"
   range_name: "Sheet1!A:M"
-  token_path: "../sheet_token.json"
+  token_path: "sheet_token.json"
 
 # Google Drive API settings
 drive:
   scopes:
     - "https://www.googleapis.com/auth/drive.file"
-  token_path: "../drive_token.json"
+  token_path: "drive_token.json"
 
 # Credentials
 credentials:
-  path: "../credentials.json"
+  path: "credentials.json"
