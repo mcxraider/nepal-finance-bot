@@ -186,9 +186,10 @@ def initiate_claim_status_check(update: Update, context: CallbackContext) -> Non
 
 def handle_invalid_claim_id(update: Update, context: CallbackContext, status):
     update.message.reply_text(
-        f"⚠️ Oops! It seems like the claim ID '{status['status_msg']}' is invalid.\n"
-        "Please double-check the ID restart the claim checking process!\n"
-        "Restart conversation: /start"
+        f"⚠️ Oops! It seems like the claim ID '{status['status_msg']}' is invalid.\n\n"
+        "Please double-check that you have the correct Claim ID and restart the claim checking process!\n"
+        "To restart the conversation: /start\n\n"
+        "If the Claim ID is invalid after a few attempts, please contact any of the members in the finance team!"
     )
 
 
@@ -214,7 +215,7 @@ def handle_claim_status_check(
         else:
             # Format the message for claims still in process
             update.message.reply_text(
-                f"⌛ *Processing Update* \n\nYour claim (ID: `{claim_id}`) is still being processed.\n\nPlease check back later for an update. We appreciate your understanding!",
+                f"⌛ *Processing Update* \n\nThe Claim ID: `{claim_id}` is still being processed.\n\nPlease check back later for an update. We appreciate your understanding!",
                 reply_markup=get_main_menu_keyboard(3, 2),
                 parse_mode="Markdown",
             )
@@ -260,6 +261,10 @@ def image_handler(update: Update, context: CallbackContext) -> None:
         handle_receipt_submission(update, context)
         context.user_data["waiting_for_receipt"] = False
 
+    elif context.user_data.get("waiting_for_payment_proof_receipt"):
+        handle_payment_proof_submission(update, context)
+        context.user_data["waiting_for_payment_proof_receipt"] = False
+
 
 def handle_receipt_submission(update: Update, context: CallbackContext) -> None:
     """Handles the logic when a receipt is submitted by the user."""
@@ -270,11 +275,11 @@ def handle_receipt_submission(update: Update, context: CallbackContext) -> None:
 
         try:
             # Send the receipt to Google Drive
-            send_receipt_to_cloud(receipt_path, photo_file)
+            send_claim_receipt_to_cloud(receipt_path, photo_file)
 
             # Store the UUID for reference and send confirmation
             context.user_data["receipt_uuid"] = receipt_path
-            update.message.reply_text("Image submitted!")
+            update.message.reply_text("Image received!")
             send_user_claim_confirmation(update, context)
 
             # Export claim details to Google Drive
@@ -284,3 +289,81 @@ def handle_receipt_submission(update: Update, context: CallbackContext) -> None:
     else:
         # If no photo is provided, ask for a valid photo
         request_valid_image(update)
+
+
+def initiate_payment_proof_submission(update: Update, context: CallbackContext) -> None:
+    """Starts the payment proof submission process by asking persons name."""
+    update.message.reply_text(
+        "Please enter your name! (eg John_Doe)", reply_markup=ReplyKeyboardRemove()
+    )
+    context.user_data["waiting_for_payment_proof_name"] = True
+
+
+def handle_payment_proof_name_input(
+    update: Update, context: CallbackContext, name: str
+) -> None:
+    """Handles user input for the description of what they are claiming for ."""
+
+    context.user_data["name"] = name
+    context.user_data["waiting_for_payment_proof_receipt"] = True
+    update.message.reply_text(
+        "Please upload a picture of your proof of payment!",
+        reply_markup=ReplyKeyboardRemove(),
+    )
+    context.user_data["waiting_for_payment_proof_name"] = False
+
+
+def send_user_payment_proof_confirmation(
+    update: Update, context: CallbackContext
+) -> None:
+    """Sends a confirmation message with the claim summary."""
+    name = context.user_data.get("name", "").capitalize()
+    receipt_id = context.user_data.get("receipt_uuid", "").capitalize()
+
+    confirmation_message = (
+        "🧾 *Your Submission Summary* 🧾\n"
+        "=============================\n"
+        f"👤 *Name*:            {name}\n"
+        "=============================\n"
+        f"*Submission ID*: \n`{receipt_id}`\n"
+        "_(Please copy this ID and keep it!)_\n"
+        "=============================\n"
+    )
+
+    update.message.reply_text(
+        confirmation_message,
+        reply_markup=get_main_menu_keyboard(3, 2),
+        parse_mode="Markdown",
+    )
+
+
+def handle_payment_proof_submission(update: Update, context: CallbackContext) -> None:
+    """Handles the logic when a proof of payment is submitted by the user."""
+    if update.message.photo:
+        photo_file = update.message.photo[-1].get_file()
+        context.user_data["image"] = photo_file
+        name = context.user_data["name"]
+        receipt_path = f"{name}_{generate_uuid()}"
+        try:
+            # Send the receipt to Google Drive
+            send_payment_proof_to_cloud(receipt_path, photo_file)
+
+            # Store the UUID for reference and send confirmation
+            context.user_data["receipt_uuid"] = receipt_path
+            update.message.reply_text("Image submitted!")
+            send_user_payment_proof_confirmation(update, context)
+
+        except ValueError:
+            handle_invalid_image(update)
+    else:
+        # If no photo is provided, ask for a valid photo
+        request_valid_image(update)
+
+
+def payment_proof_handler(update: Update, context: CallbackContext) -> None:
+    """
+    Handles the receipt image sent by the user.
+    """
+    if context.user_data.get("waiting_for_payment_proof_receipt"):
+        handle_payment_proof_submission(update, context)
+        context.user_data["waiting_for_payment_proof_receipt"] = False

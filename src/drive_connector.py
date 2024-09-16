@@ -17,7 +17,8 @@ from googleapiclient.discovery import build
 
 load_dotenv()
 SAMPLE_SPREADSHEET_ID = os.environ["SAMPLE_SPREADSHEET_ID"]
-DRIVE_FOLDER_ID = os.environ["DRIVE_FOLDER_ID"]
+CLAIM_RECEIPT_FOLDER_ID = os.environ["CLAIM_RECEIPT_FOLDER_ID"]
+PAYMENT_PROOF_FOLDER_ID = os.environ["PAYMENT_PROOF_FOLDER_ID"]
 
 
 # Load in config file
@@ -98,7 +99,7 @@ def get_claim_status(df, id):
     return {"error": False, "status_msg": status_msg}
 
 
-def send_receipt_to_cloud(receipt_path: str, photo_file) -> str:
+def send_claim_receipt_to_cloud(receipt_path: str, photo_file) -> str:
     """Uploads the receipt to a pre-defined folder in Google Drive and returns the file ID."""
 
     creds = None
@@ -128,7 +129,56 @@ def send_receipt_to_cloud(receipt_path: str, photo_file) -> str:
         image_uuid = receipt_path
         file_metadata = {
             "name": f"{image_uuid}.jpg",
-            "parents": [DRIVE_FOLDER_ID],
+            "parents": [CLAIM_RECEIPT_FOLDER_ID],
+        }
+
+        # store media bytes
+        receipt_stream = io.BytesIO(photo_file.download_as_bytearray())
+        media = MediaIoBaseUpload(receipt_stream, mimetype="image/jpeg")
+
+        # Upload the file to Google Drive inside the folder with FOLDER_ID
+        file = (
+            service.files()
+            .create(body=file_metadata, media_body=media, fields="id")
+            .execute()
+        )
+        return
+
+    else:
+        raise ValueError("File type is not JPG")
+
+
+def send_payment_proof_to_cloud(receipt_path: str, photo_file) -> str:
+    """Uploads the receipt to a pre-defined folder in Google Drive and returns the file ID."""
+
+    creds = None
+
+    if os.path.exists(DRIVE_TOKEN_PATH):
+        creds = Credentials.from_authorized_user_file(DRIVE_TOKEN_PATH, G_DRIVE_SCOPES)
+
+    if not creds or not creds.valid:
+        if creds and creds.expired and creds.refresh_token:
+            creds.refresh(Request())  # refresh the token if it’s expired
+        else:
+            # Log in and get new credentials
+            flow = InstalledAppFlow.from_client_secrets_file(
+                CREDENTIALS_PATH, G_DRIVE_SCOPES
+            )
+            creds = flow.run_local_server(port=0)
+
+        with open(DRIVE_TOKEN_PATH, "w") as token:
+            token.write(creds.to_json())
+
+    # calling the google drive API
+    service = build("drive", "v3", credentials=creds)
+
+    # Validate the MIME type to ensure it's a JPG
+    if photo_file.file_path.endswith(".jpg") or photo_file.file_path.endswith(".jpeg"):
+        # Use a unique file name for the receipt using the UUID
+        image_uuid = receipt_path
+        file_metadata = {
+            "name": f"{image_uuid}.jpg",
+            "parents": [PAYMENT_PROOF_FOLDER_ID],
         }
 
         # store media bytes

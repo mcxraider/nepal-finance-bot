@@ -1,6 +1,6 @@
 import logging
 from datetime import datetime
-from telegram import Update, ReplyKeyboardRemove
+from telegram import Update
 from telegram.ext import CallbackContext
 
 logging.basicConfig(
@@ -19,7 +19,7 @@ def error_handler(update: Update, context: CallbackContext) -> None:
     # Notify the user that an error occurred
     update.message.reply_text(
         "An unexpected error occurred. Please try again. \
-        If the issue persists, please contact me @jer_jerryyy",
+        If the issue persists, please contact me `@jer_jerryyy`",
         # Please add ur tele handles here so people can contact us
         parse_mode="Markdown",
     )
@@ -71,15 +71,11 @@ def handle_non_image_file(update: Update, context: CallbackContext) -> None:
     """Handles the scenario where a user uploads a non-image file."""
     file_type = update.message.document.mime_type
     if is_valid_non_image_file(file_type):
-        update.message.reply_text(
-            "📝 *It looks like you uploaded a non-image file.*\n\n"
-            "Please upload a valid photo in *JPG* or *PNG* format."
-        )
+        error_message = """📝 *It looks like you uploaded a non-image file.*\n\nPlease upload a valid photo in *JPG* or *PNG* format."""
+        update.message.reply_text(error_message, parse_mode="Markdown")
     else:
-        update.message.reply_text(
-            "🚫 I'm Sorry, we currently do not support this file type*\n\n"
-            "Please upload an image of your receipt in *JPG* format."
-        )
+        error_message = """🚫 I'm Sorry, we currently do not support this file type*\n\nPlease upload an image of your receipt in *JPG* format."""
+        update.message.reply_text(error_message, parse_mode="Markdown")
 
 
 def is_valid_non_image_file(file_type: str) -> bool:
@@ -96,10 +92,8 @@ def is_valid_non_image_file(file_type: str) -> bool:
 
 def request_valid_image(update: Update) -> None:
     """Prompts the user to upload a valid image if no document is uploaded."""
-    update.message.reply_text(
-        "🖼️ *Oops! It looks like you uploaded a document instead.*\n\n"
-        "Please make sure to upload a clear image of your receipt in *JPG format*."
-    )
+    error_msg = """🖼️ *Oops! It looks like you uploaded a document instead.*\n\nPlease make sure to upload a clear image of your receipt in *JPG format*."""
+    update.message.reply_text(error_msg, parse_mode="Markdown")
 
 
 def notify_payment_feature_coming(update: Update) -> None:
@@ -115,7 +109,7 @@ def notify_invalid_option(update: Update) -> None:
     """Notifies the user that the input is not a valid option."""
     error_message = """*Oops! 😕 I didn’t quite get that.*
 
-It looks like you entered an *invalid option* or *command*. Don’t worry, it happens!
+It looks like you entered an *invalid option* or *command*.
 
 👉 Press /start to return to the main menu and explore the chat functions."""
     update.message.reply_text(error_message, parse_mode="Markdown")
@@ -126,6 +120,6 @@ def unknown_command(update: Update, context: CallbackContext) -> None:
     Handles unknown commands and sends an error message.
     """
     update.message.reply_text(
-        "⚠️ Sorry, that is not a valid command!\n\nHere are the available commands:\n /start - Start a new chat!\n/end - Reset conversation!",
+        "⚠️ Sorry, that is not a valid command!\n\nHere are the available commands:\n/start - Start a new chat!\n/end - Reset the conversation!",
         parse_mode="Markdown",
     )

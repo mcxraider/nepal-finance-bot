@@ -1,4 +1,3 @@
-import os
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -27,11 +26,18 @@ logger = logging.getLogger(__name__)
 
 
 def start(update: Update, context: CallbackContext) -> None:
-    """Sends a greeting and asks what the user wants to do"""
-
+    """Sends a greeting and provides options to the user."""
+    welcome_msg = (
+        "Hi, welcome to the Nepal Finance Bot!\n\n"
+        "📂 *Directory:*\n"
+        "/end - End the conversation at any time\n\n"
+        "Please select one of the options below:\n\n"
+        "📝 **Submit a Claim**\n"
+        "🔍 **Check Claim Status**\n"
+        "📸 **Submit Proof of Payment**\n"
+    )
     update.message.reply_text(
-        "Hi Welcome to the Nepal Finance Bot! What would you like to do?",
-        reply_markup=get_main_menu_keyboard(3, 2),
+        welcome_msg, reply_markup=get_main_menu_keyboard(3, 2), parse_mode="Markdown"
     )
 
 
@@ -63,9 +69,15 @@ def handle_response(update: Update, context: CallbackContext) -> None:
         handle_description_input(update, context, user_response)
         return
 
-    if context.user_data.get("waiting_for_receipt"):
+    if context.user_data.get("waiting_for_receipt") or context.user_data.get(
+        "waiting_for_payment_proof_receipt"
+    ):
         # If waiting for an image but the user sends text, treat it as a non-image submission
         throw_text_error(update, context)
+        return
+
+    if context.user_data.get("waiting_for_payment_proof_name"):
+        handle_payment_proof_name_input(update, context, user_response)
         return
 
     # Handle the main menu options
@@ -74,8 +86,7 @@ def handle_response(update: Update, context: CallbackContext) -> None:
     elif user_response == "Check Claim Status":
         initiate_claim_status_check(update, context)
     elif user_response == "Submit Proof of Payment":
-        # TODO: Create submit proof functionality
-        notify_payment_feature_coming(update)
+        initiate_payment_proof_submission(update, context)
     else:
         notify_invalid_option(update)
 
@@ -86,7 +97,7 @@ def end_conversation(update: Update, context: CallbackContext) -> None:
     """
     context.user_data.clear()
     update.message.reply_text(
-        "👋 Thanks! Feel free to choose an option below to continue whenever you're ready.",
+        "👋 Thanks for chatting! Feel free to choose an option below to continue whenever you're ready.",
         reply_markup=get_main_menu_keyboard(3, 2),
     )
 
