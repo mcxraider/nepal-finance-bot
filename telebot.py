@@ -107,9 +107,8 @@ def main() -> None:
     """
     Main function to start the bot.
     """
-    BOTAPI_KEY = os.getenv('BOTAPI_KEY')
     # Fetch the bot token from environment variables for security
-    updater = Updater(token=BOTAPI_KEY, use_context=True)
+    updater = Updater(token=os.environ.get("BOTAPI_KEY").strip(), use_context=True)
     dispatcher = updater.dispatcher
 
     # Command Handlers
