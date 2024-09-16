@@ -7,18 +7,6 @@ from drive_connector import *
 from error_handling import *
 
 
-# def get_bot_api_key(key: str) -> str:
-#     """
-#     Fetches an environment variable and raises an error if it is not set.
-#     """
-#     value = os.environ.get(key)
-#     if not os.environ.get(key):
-#         raise RuntimeError(
-#             f"Environment variable '{key}' is not set. Ensure that you have the BOTAPI_KEY set in your environment file"
-#         )
-#     return value.strip()
-
-
 def create_reply_keyboard(
     options: list[str], rows: int, columns: int, placeholder: str = None
 ) -> ReplyKeyboardMarkup:
