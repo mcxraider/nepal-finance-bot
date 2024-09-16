@@ -292,7 +292,7 @@ def handle_receipt_submission(update: Update, context: CallbackContext) -> None:
 
 
 def initiate_payment_proof_submission(update: Update, context: CallbackContext) -> None:
-    """Starts the payment proof submission process by asking persons name."""
+    """Starts the payment proof submission process by asking for the persons name."""
     update.message.reply_text(
         "Please enter your name! (eg John_Doe)", reply_markup=ReplyKeyboardRemove()
     )
@@ -302,7 +302,7 @@ def initiate_payment_proof_submission(update: Update, context: CallbackContext) 
 def handle_payment_proof_name_input(
     update: Update, context: CallbackContext, name: str
 ) -> None:
-    """Handles user input for the description of what they are claiming for ."""
+    """Handles user input for the users name for the payment tracking."""
 
     context.user_data["name"] = name
     context.user_data["waiting_for_payment_proof_receipt"] = True
@@ -316,7 +316,7 @@ def handle_payment_proof_name_input(
 def send_user_payment_proof_confirmation(
     update: Update, context: CallbackContext
 ) -> None:
-    """Sends a confirmation message with the claim summary."""
+    """Sends a confirmation message with the submission summary."""
     name = context.user_data.get("name", "").capitalize()
     receipt_id = context.user_data.get("receipt_uuid", "").capitalize()
 
