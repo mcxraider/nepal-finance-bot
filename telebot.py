@@ -1,6 +1,5 @@
 from dotenv import load_dotenv
 
-load_dotenv()
 import logging
 from telegram import Update
 from telegram.ext import (
@@ -24,6 +23,8 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
+load_dotenv()
+BOTAPI_KEY = os.environ["BOTAPI_KEY"]
 
 def start(update: Update, context: CallbackContext) -> None:
     """Sends a greeting and provides options to the user."""
@@ -107,7 +108,7 @@ def main() -> None:
     Main function to start the bot.
     """
     # Fetch the bot token from environment variables for security
-    updater = Updater(token=os.environ["BOTAPI_KEY"], use_context=True)
+    updater = Updater(token=BOTAPI_KEY, use_context=True)
     dispatcher = updater.dispatcher
 
     # Command Handlers
