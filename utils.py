@@ -207,8 +207,8 @@ def handle_claim_status_check(
                 reply_markup=get_main_menu_keyboard(3, 2),
                 parse_mode="Markdown",
             )
-
     context.user_data["waiting_for_claim_id"] = False
+    context.user_data.clear()
 
 
 def send_user_claim_confirmation(update: Update, context: CallbackContext) -> None:
@@ -277,6 +277,7 @@ def handle_receipt_submission(update: Update, context: CallbackContext) -> None:
     else:
         # If no photo is provided, ask for a valid photo
         request_valid_image(update)
+    context.user_data.clear()
 
 
 def initiate_payment_proof_submission(update: Update, context: CallbackContext) -> None:
@@ -323,6 +324,7 @@ def send_user_payment_proof_confirmation(
         reply_markup=get_main_menu_keyboard(3, 2),
         parse_mode="Markdown",
     )
+    context.user_data.clear()
 
 
 def handle_payment_proof_submission(update: Update, context: CallbackContext) -> None:
@@ -346,6 +348,7 @@ def handle_payment_proof_submission(update: Update, context: CallbackContext) ->
     else:
         # If no photo is provided, ask for a valid photo
         request_valid_image(update)
+    context.user_data.clear()
 
 
 def payment_proof_handler(update: Update, context: CallbackContext) -> None:

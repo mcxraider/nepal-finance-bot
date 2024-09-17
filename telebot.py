@@ -26,6 +26,7 @@ logger = logging.getLogger(__name__)
 load_dotenv()
 BOTAPI_KEY = os.environ["BOTAPI_KEY"]
 
+
 def start(update: Update, context: CallbackContext) -> None:
     """Sends a greeting and provides options to the user."""
     welcome_msg = (
