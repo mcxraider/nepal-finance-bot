@@ -114,7 +114,6 @@ Before setting up the bot, ensure you have the following:
    Once everything is set up, navigate to the src folder and run the bot using:
 
    ```bash
-   cd src
    python telebot.py
    ```
 
@@ -125,28 +124,6 @@ Before setting up the bot, ensure you have the following:
 
 1. **Bot Activation**:
    Once the bot is running, start interacting with it by searching for it in Telegram with the username `@nepalfinancebot`.
-
-## File Structure
-
-```
-NEPAL-FINANCE/
-│
-├── src/
-│   ├── __pycache__/                # Python cache files (auto-generated)
-│   ├── drive_connector.py          # Module for handling Google Drive API
-│   ├── error_handling.py           # Error handling utilities
-│   ├── telebot.py                  # Main bot file
-│   ├── utils.py                    # Utility functions for Google Sheets and Drive
-│
-├── venv/                           # Virtual environment (dependencies)
-├── .env                            # Environment variables for bot configuration
-├── .gitignore                      # Git ignore file (to ignore unnecessary files)
-├── credentials.json                # Google API credentials (for authentication)
-├── drive_token.json                # Token for Google Drive API (auto-generated after first run)
-├── sheet_token.json                # Token for Google Sheets API (auto-generated after first run)
-├── README.md                       # Project documentation
-├── requirements.txt                # Python dependencies
-```
 
 ## Contributing
 
